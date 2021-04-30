@@ -7,6 +7,18 @@
 2. MerkleDistributor.sol
 
    https://etherscan.io/address/0x587e90de5b34940cd961a6a9423c10c598c40c31
+   
+3. PToken_Server.sol
+
+   In development
+
+4. GToken_A.sol
+
+   In development
+
+5. CITYSocialServer.sol
+
+   In development
 
  - merkleRoot
 
