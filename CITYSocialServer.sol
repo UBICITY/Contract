@@ -1,12 +1,9 @@
 pragma solidity ^0.8.0;
 
 import "./PToken_Server.sol";
+import "./iPerformancePool.sol";
+import "./FixidityLib.sol";
 
-interface iPerformancePool {
-    function restartPerformance() external;
-
-    function getPerformanceWithAddress() external;
-}
 
 contract CITYSocialServer is iPerformancePool {
     struct RegisterStruct {
@@ -14,101 +11,100 @@ contract CITYSocialServer is iPerformancePool {
         address upAddress;
     }
 
-    struct AwardStruct {
-        uint8 RemainingAward;
-        mapping(address => uint8) downAwardMap;
-    }
-
     mapping(address => RegisterStruct) DownLinkUpMap;
 
-    mapping(address => AwardStruct) UpAddressDistributionAwardMap;
+    address rootAddress = address(0x9999999999999999999999999999999999999999);
+    address[] CityAddressList = [rootAddress];
+    mapping(address => bool) isCityAddressMap;
+    mapping(address => uint256) public SocialJXMap;
 
-    mapping(address => uint8) downAddressAwardMap;
-
-    mapping(address => uint64) PerformanceValueMap;
-
-    uint256 _decimals;
+    mapping(address => address[]) UpToDownAddressMap;
 
     address public owner;
-
-    address pTokenContractAddress;
+    address public pTokenContractAddress;
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "NOT_OWNER");
+        // require(msg.sender == owner, "NOT_OWNER");
         _;
     }
 
     constructor() {
-        _decimals = 100;
         owner = msg.sender;
+    }
+
+    function getCityAddressList() public view returns (address[] memory) {
+        return CityAddressList;
+    }
+
+    function getUpToDownAddressList(address upAddress)
+        public
+        view
+        returns (address[] memory)
+    {
+        return UpToDownAddressMap[upAddress];
     }
 
     function initPTokenServer(address _pTokenContractAddress) public onlyOwner {
         pTokenContractAddress = _pTokenContractAddress;
     }
 
-    function registerUpAddress(address upAddress) public {
+    function registerUpAddress(address downAddress, address upAddress) public {
         require(
             upAddress != address(0x0),
             "trustAddress can not be address zero"
         );
-        require(msg.sender != address(0x0), "sender can not be address zero");
         require(
-            DownLinkUpMap[msg.sender].isRegister == false,
-            "sender is already register"
+            isCityAddressMap[upAddress] == true,
+            "upAddress must be CityAddress"
+        );
+        RegisterAddressAssociation(downAddress, upAddress);
+    }
+
+    function registerUpToMain(address downAddress) public {
+        // require(msg.sender == downAddress, "msg.sender must be equal to downAddress");
+        RegisterAddressAssociation(downAddress, rootAddress);
+    }
+
+    function RegisterAddressAssociation(address downAddress, address upAddress)
+        internal
+    {
+        require(
+            isCityAddressMap[downAddress] == false,
+            "msg.sender must not be CityAddress"
+        );
+        require(
+            DownLinkUpMap[downAddress].isRegister == false,
+            "when register, msg.sender must not be CityAddress"
         );
         RegisterStruct memory newStruct =
             RegisterStruct({isRegister: true, upAddress: upAddress});
-        DownLinkUpMap[msg.sender] = newStruct;
+        DownLinkUpMap[downAddress] = newStruct;
+        CityAddressList.push(downAddress);
+        isCityAddressMap[downAddress] = true;
+        UpToDownAddressMap[upAddress].push(downAddress);
+        mintPtokenForCityAddress(downAddress);
+        JxProcess(upAddress);
     }
 
-    function registerUpToMain() public {
-        require(msg.sender != address(0x0), "sender can not be address zero");
-        require(
-            DownLinkUpMap[msg.sender].isRegister == false,
-            "sender is already register"
-        );
-        RegisterStruct memory newStruct =
-            RegisterStruct({isRegister: true, upAddress: address(0x0)});
-        DownLinkUpMap[msg.sender] = newStruct;
+    function JxProcess(address upAddress) internal {
+        bool isContinue = true;
+        address _supAddress = upAddress;
+        do {
+            if (_supAddress == rootAddress) {
+                isContinue = false;
+                SocialJXMap[_supAddress] += 1;
+            } else {
+                SocialJXMap[_supAddress] += 1;
+                if (DownLinkUpMap[_supAddress].isRegister == false) {
+                    isContinue = false;
+                } else {
+                    _supAddress = DownLinkUpMap[_supAddress].upAddress;
+                }
+            }
+        } while (isContinue);
     }
 
-    function updateUpAddress(address upAddress) public {
-        require(
-            upAddress != address(0x0),
-            "trustAddress can not be address zero"
-        );
-        require(msg.sender != address(0x0), "sender can not be address zero");
-        require(
-            DownLinkUpMap[msg.sender].isRegister == true,
-            "sender has not register yet"
-        );
-        RegisterStruct memory newStruct =
-            RegisterStruct({isRegister: true, upAddress: upAddress});
-        DownLinkUpMap[msg.sender] = newStruct;
-    }
-
-    function updateUpToMain() public {
-        require(msg.sender != address(0x0), "sender can not be address zero");
-        require(
-            DownLinkUpMap[msg.sender].isRegister == true,
-            "sender has not register yet"
-        );
-        RegisterStruct memory newStruct =
-            RegisterStruct({isRegister: true, upAddress: address(0x0)});
-        DownLinkUpMap[msg.sender] = newStruct;
-    }
-
-    function modifyDownAward(address downAddress, uint8 award) public {
-        require(msg.sender != address(0x0), "sender can not be address zero");
-        require(
-            DownLinkUpMap[downAddress].upAddress == msg.sender,
-            "sender is not downAddress's upAddress"
-        );
-        // UpAddressDistributionAwardMap[msg.sender]......
-    }
-
-    function mintPtokenForCityAddress(address cityAddress) public {
+    function mintPtokenForCityAddress(address cityAddress) internal {
         require(
             pTokenContractAddress != address(0x0),
             "pTokenContractAddress must be init"
@@ -116,15 +112,18 @@ contract CITYSocialServer is iPerformancePool {
         PToken_Server(pTokenContractAddress).mintFromControler(cityAddress);
     }
 
-    // function restartPerformance() override public{
-    //   PerformanceValueMap = {};
-    // }
-
     function getPerformanceWithAddress(address CityAddress)
         public
+        view
         override
-        returns (uint64)
+        returns (uint256)
     {
-        return PerformanceValueMap[CityAddress];
+        return SocialJXMap[CityAddress];
+    }
+
+    function restartPerformance() public override {
+        for (uint256 i = 0; i < CityAddressList.length; i++) {
+            SocialJXMap[CityAddressList[i]] = 0;
+        }
     }
 }

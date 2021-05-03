@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "./GToken_A.sol";
 
-
-
 contract PToken_Server is ERC1155 {
     mapping(address => uint64) public CITYAddressMap;
     mapping(uint64 => address) public CITYIDMap;
@@ -12,6 +10,15 @@ contract PToken_Server is ERC1155 {
     mapping(uint64 => uint256) public startBlock;
     uint64 public nowCityID = 1;
     uint8 public rewardCoefficient = 1;
+
+    // modifier onlyOwner() {
+    //     // require(
+    //     //     msg.sender == administrator,
+    //     //     "only administrator can call this"
+    //     // );
+
+    //     _;
+    // }
 
     function mintGrow() public {
         require(
