@@ -8,7 +8,7 @@
 
    https://etherscan.io/address/0x587e90de5b34940cd961a6a9423c10c598c40c31
 
-3. PToken_Server.sol
+3. NPToken_Server.sol
 
    In development
 
@@ -16,11 +16,11 @@
 
    In development
 
-5. CITYSocialServer.sol
+5. NCITYSocialServer.sol
 
    In development
 
-6. FixidityLib.sol
+6. NERC1155.sol
 
    In development
 
@@ -28,7 +28,7 @@
 
    In development
 
-8. PPLControl.sol
+8. NPPLControl.sol
 
    In development
 

@@ -1,11 +1,10 @@
 pragma solidity ^0.8.0;
 
-import "./PToken_Server.sol";
+import "./NPToken_Server.sol";
 import "./iPerformancePool.sol";
-import "./FixidityLib.sol";
+import "./NPPLControl.sol";
 
-
-contract CITYSocialServer is iPerformancePool {
+contract NCITYSocialServer is iPerformancePool {
     struct RegisterStruct {
         bool isRegister;
         address upAddress;
@@ -14,17 +13,18 @@ contract CITYSocialServer is iPerformancePool {
     mapping(address => RegisterStruct) DownLinkUpMap;
 
     address rootAddress = address(0x9999999999999999999999999999999999999999);
-    address[] CityAddressList = [rootAddress];
+    address[] CityAddressList;
     mapping(address => bool) isCityAddressMap;
-    mapping(address => uint256) public SocialJXMap;
+    mapping(address => uint256) SocialJXMap;
 
     mapping(address => address[]) UpToDownAddressMap;
 
-    address public owner;
+    address owner;
     address public pTokenContractAddress;
+    address public pPLControlContractAddress;
+    address public selfAddress;
 
     modifier onlyOwner() {
-        // require(msg.sender == owner, "NOT_OWNER");
         _;
     }
 
@@ -48,11 +48,26 @@ contract CITYSocialServer is iPerformancePool {
         pTokenContractAddress = _pTokenContractAddress;
     }
 
+    function initPPLControlServer(address _pPLControlContractAddress)
+        public
+        onlyOwner
+    {
+        pPLControlContractAddress = _pPLControlContractAddress;
+    }
+
+    function initSelfServer(address _selfContractAddress) public onlyOwner {
+        selfAddress = _selfContractAddress;
+    }
+
+    // 用户传入自己的授信地址进行register
     function registerUpAddress(address downAddress, address upAddress) public {
+        // 入参地址格式检查
         require(
             upAddress != address(0x0),
             "trustAddress can not be address zero"
         );
+        // require(msg.sender == downAddress, "msg.sender must be equal to downAddress");
+        // 判断upAddress是否为CityAddress
         require(
             isCityAddressMap[upAddress] == true,
             "upAddress must be CityAddress"
@@ -61,7 +76,6 @@ contract CITYSocialServer is iPerformancePool {
     }
 
     function registerUpToMain(address downAddress) public {
-        // require(msg.sender == downAddress, "msg.sender must be equal to downAddress");
         RegisterAddressAssociation(downAddress, rootAddress);
     }
 
@@ -76,6 +90,11 @@ contract CITYSocialServer is iPerformancePool {
             DownLinkUpMap[downAddress].isRegister == false,
             "when register, msg.sender must not be CityAddress"
         );
+        require(
+            selfAddress != address(0) &&
+                pPLControlContractAddress != address(0),
+            "selfAddress || pPLControlContractAddress must be init"
+        );
         RegisterStruct memory newStruct =
             RegisterStruct({isRegister: true, upAddress: upAddress});
         DownLinkUpMap[downAddress] = newStruct;
@@ -83,6 +102,11 @@ contract CITYSocialServer is iPerformancePool {
         isCityAddressMap[downAddress] = true;
         UpToDownAddressMap[upAddress].push(downAddress);
         mintPtokenForCityAddress(downAddress);
+        NPPLControl(pPLControlContractAddress).increaseAddressJx(
+            upAddress,
+            selfAddress,
+            1
+        );
         JxProcess(upAddress);
     }
 
@@ -96,6 +120,7 @@ contract CITYSocialServer is iPerformancePool {
             } else {
                 SocialJXMap[_supAddress] += 1;
                 if (DownLinkUpMap[_supAddress].isRegister == false) {
+                    // 不应该会走入这个逻辑里边来
                     isContinue = false;
                 } else {
                     _supAddress = DownLinkUpMap[_supAddress].upAddress;
@@ -109,7 +134,7 @@ contract CITYSocialServer is iPerformancePool {
             pTokenContractAddress != address(0x0),
             "pTokenContractAddress must be init"
         );
-        PToken_Server(pTokenContractAddress).mintFromControler(cityAddress);
+        NPToken_Server(pTokenContractAddress).mintFromControler(cityAddress);
     }
 
     function getPerformanceWithAddress(address CityAddress)
@@ -119,6 +144,14 @@ contract CITYSocialServer is iPerformancePool {
         returns (uint256)
     {
         return SocialJXMap[CityAddress];
+    }
+
+    function getUpAddress(address userAddress) public view returns (address) {
+        require(
+            isCityAddressMap[userAddress] == true,
+            "userAddress must be cityAddress"
+        );
+        return DownLinkUpMap[userAddress].upAddress;
     }
 
     function restartPerformance() public override {

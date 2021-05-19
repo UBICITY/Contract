@@ -1,77 +1,74 @@
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "./NERC1155.sol";
 import "./GToken_A.sol";
 
-contract PToken_Server is ERC1155 {
-    mapping(address => uint64) public CITYAddressMap;
-    mapping(uint64 => address) public CITYIDMap;
+contract NPToken_Server is NERC1155 {
+    mapping(address => uint256) public CITYAddressMap;
     address[] public CityAddress;
-    mapping(uint64 => uint256) public startBlock;
-    uint64 public nowCityID = 1;
-    uint8 public rewardCoefficient = 1;
+    uint256 public nowCityID = 1;
 
-    // modifier onlyOwner() {
-    //     // require(
-    //     //     msg.sender == administrator,
-    //     //     "only administrator can call this"
-    //     // );
+    address _OWNER_;
 
-    //     _;
-    // }
+    modifier onlyOwner() {
+        require(msg.sender == _OWNER_, "NOT OWNER");
+        _;
+    }
+
+    constructor() public NERC1155("") {
+        _OWNER_ = msg.sender;
+    }
 
     function mintGrow() public {
         require(
             CITYAddressMap[msg.sender] != 0,
-            "msg.sender must be a cityMember"
+            "msg.sender must be a CityMember"
         );
-        uint64 cityID = CITYAddressMap[msg.sender];
-        uint256 startBlockNum = startBlock[cityID];
+        uint256 cityID = CITYAddressMap[msg.sender];
+        uint256 startBlockNum = AddressRewardMap[cityID];
         uint256 currentBlockNum = block.number;
         uint256 amount = (currentBlockNum - startBlockNum) * rewardCoefficient;
-        startBlock[cityID] = currentBlockNum;
+        AddressRewardMap[cityID] = currentBlockNum;
         bytes memory data;
         _mint(msg.sender, cityID, amount, data);
     }
 
     function mintAutoGrow(
         address rewardAddress,
-        uint64 rewardCityID // external // onlyOwner
-    ) public {
+        uint256 rewardCityID // external
+    ) public onlyOwner {
         require(
             CITYAddressMap[rewardAddress] != 0,
             "rewardAddress must be a cityMember"
         );
-        uint64 CityID = CITYAddressMap[rewardAddress];
+        uint256 CityID = CITYAddressMap[rewardAddress];
         require(
             rewardCityID == CityID,
             "rewardAddress and rewardCityID must be a pair"
         );
-        uint256 startBlockNum = startBlock[rewardCityID];
+        uint256 startBlockNum = AddressRewardMap[rewardCityID];
         uint256 currentBlockNum = block.number;
         uint256 amount = (currentBlockNum - startBlockNum) * rewardCoefficient;
-        startBlock[rewardCityID] = currentBlockNum;
+        AddressRewardMap[rewardCityID] = currentBlockNum;
         bytes memory data;
         _mint(rewardAddress, rewardCityID, amount, data);
     }
 
     function mintAutoGrowAllUser(
-        uint64 startIndex,
-        uint64 limit // external // onlyOwner
-    ) public {
+        uint256 startIndex,
+        uint256 limit // external
+    ) public onlyOwner {
         require(CityAddress.length > startIndex, "must be enough city member");
-        uint64 circleLimit = 0;
+        uint256 circleLimit = 0;
         if (CityAddress.length - startIndex > limit) {
             circleLimit = limit;
         } else {
-            circleLimit = uint64(CityAddress.length) - startIndex;
+            circleLimit = uint256(CityAddress.length) - startIndex;
         }
-        for (uint64 i = startIndex; i < circleLimit + startIndex; i++) {
+        for (uint256 i = startIndex; i < circleLimit + startIndex; i++) {
             mintAutoGrow(CityAddress[i], CITYAddressMap[CityAddress[i]]);
         }
     }
-
-    constructor() public ERC1155("") {}
 
     function mintFromControler(address deployAccount) public {
         require(
@@ -79,9 +76,9 @@ contract PToken_Server is ERC1155 {
             "the address can only make one token"
         );
         CITYAddressMap[deployAccount] = nowCityID;
-        CITYIDMap[nowCityID] = deployAccount;
+        IDMap[nowCityID] = deployAccount;
         CityAddress.push(deployAccount);
-        startBlock[nowCityID] = block.number;
+        AddressRewardMap[nowCityID] = block.number;
         bytes memory data;
         _mint(deployAccount, nowCityID, 10000, data);
         nowCityID++;
@@ -89,7 +86,7 @@ contract PToken_Server is ERC1155 {
 
     function burnMoney(
         address account,
-        uint64 id,
+        uint256 id,
         uint256 amount
     ) public {
         require(msg.sender == account, "only account user can call this");
@@ -97,12 +94,12 @@ contract PToken_Server is ERC1155 {
     }
 
     function mintWithGtokenContract(
-        uint64 CityID,
+        uint256 CityID,
         address GtokenContract,
         uint256 value
     ) public {
         require(
-            CITYIDMap[CityID] != address(0x0),
+            IDMap[CityID] != address(0x0),
             "CityID must be include in ptoken"
         );
         require(
@@ -115,5 +112,29 @@ contract PToken_Server is ERC1155 {
         );
         GToken_A(GtokenContract).mintWithPtokenValue(msg.sender, value);
         burnMoney(msg.sender, CityID, value);
+    }
+
+    function getCityIDWithAddress(address userAddress)
+        public
+        view
+        returns (uint256)
+    {
+        require(
+            CITYAddressMap[userAddress] != 0,
+            "userAddress must be include in ptoken"
+        );
+        return CITYAddressMap[userAddress];
+    }
+
+    function getAddressWithCityID(uint256 cityID)
+        public
+        view
+        returns (address)
+    {
+        require(
+            IDMap[cityID] != address(0x0),
+            "cityID must be include in ptoken"
+        );
+        return IDMap[cityID];
     }
 }
