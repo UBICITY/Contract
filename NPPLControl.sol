@@ -33,7 +33,7 @@ contract NPPLControl {
     }
 
     modifier onlyOwner() {
-        // require(msg.sender == _OWNER_, "NOT OWNER");
+        require(msg.sender == _OWNER_, "NOT OWNER");
         _;
     }
 

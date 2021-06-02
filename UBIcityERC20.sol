@@ -7,7 +7,6 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
-
 /**
  * @title SafeMath
  * @author CITYMAN
@@ -62,8 +61,6 @@ library SafeMath {
     }
 }
 
-
-
 /**
  * @title UBI.city Token
  * @author CITYMAN
@@ -84,7 +81,11 @@ contract UBIcityERC20 {
 
     event Transfer(address indexed from, address indexed to, uint256 amount);
 
-    event Approval(address indexed owner, address indexed spender, uint256 amount);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 amount
+    );
 
     // ============ Functions ============
 
@@ -153,7 +154,11 @@ contract UBIcityERC20 {
      * @param spender address The address which will spend the funds.
      * @return A uint256 specifying the amount of tokens still available for the spender.
      */
-    function allowance(address owner, address spender) public view returns (uint256) {
+    function allowance(address owner, address spender)
+        public
+        view
+        returns (uint256)
+    {
         return allowed[owner][spender];
     }
 }

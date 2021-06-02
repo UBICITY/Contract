@@ -16,12 +16,12 @@ contract GToken_A is ERC20, iGtoken {
     address public pTokenServer;
 
     modifier onlyOwner() {
-        // require(msg.sender == owner, "NOT_OWNER");
+        require(msg.sender == owner, "NOT_OWNER");
         _;
     }
 
     modifier onlyPTokenServer() {
-        // require(msg.sender == pTokenServer, "NOT_PTOKEN_SERVER");
+        require(msg.sender == pTokenServer, "NOT_PTOKEN_SERVER");
         _;
     }
 
