@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 import "./NCITYSocialServer.sol";
 import "./iPerformancePool.sol";
 import "./NPToken_Server.sol";
-import "hardhat/console.sol";
 
 contract NPPLControl {
     address rootAddress = address(0x9999999999999999999999999999999999999999);
@@ -54,19 +53,9 @@ contract NPPLControl {
             "CitySocialServerAddress must be init"
         );
         _rollIndex++;
-        console.log("roolIndex =", _rollIndex);
         _CityAddressList = NCITYSocialServer(CitySocialServerAddress)
             .getCityAddressList();
-        for (uint256 index = 0; index < _CityAddressList.length; index++) {
-            console.log(
-                "CityAddressList[",
-                index,
-                "]=",
-                _CityAddressList[index]
-            );
-        }
         uint256 sepNum = generateSepNum(_CityAddressList);
-        console.log("sepNum =", sepNum);
         setSepatorNum(sepNum);
     }
 
@@ -122,14 +111,10 @@ contract NPPLControl {
                 (WAD * jxValue * JXProportionMap[contractAddress]) /
                 2**index /
                 JXTotal;
-            console.log("PTokenServerAddress = ", PTokenServerAddress);
-            console.log("user1 = ", user1);
             uint256 user1ID =
                 NPToken_Server(PTokenServerAddress).getCityIDWithAddress(
                     user1
                 ) - 1;
-            console.log("user1ID = ", user1ID);
-            console.log("sepatorNum = ", _sepatorNum);
 
             uint256 user2ID;
             if (user1ID >= _sepatorNum) {
@@ -138,19 +123,13 @@ contract NPPLControl {
                 user2ID = user1ID + _sepatorNum;
             }
 
-            console.log("user2ID = ", user2ID);
             address user2 =
                 NPToken_Server(PTokenServerAddress).getAddressWithCityID(
                     user2ID + 1
                 );
-            console.log("user2 = ", user2);
             bool state = addressPK(user1, user2);
-            console.log("pkState = ", state);
             bool user1_score_state = RollScoreStateMap[_rollIndex][user1];
-            console.log("user1_score_state = ", user1_score_state);
             bool user2_score_state = RollScoreStateMap[_rollIndex][user2];
-            console.log("user2_score_state = ", user2_score_state);
-            console.log("oneBlockScore = ", oneBlockScore());
             if (!user1_score_state && !user2_score_state) {
                 if (state) {
                     ScoreMap[user1] += oneBlockScore();
@@ -206,9 +185,7 @@ contract NPPLControl {
         );
         require(user1 != user2, "pkAddress can not be equal");
         uint256 user1JX = RollJxMap[_rollIndex][user1];
-        console.log("user1JX =", user1JX);
         uint256 user2JX = RollJxMap[_rollIndex][user2];
-        console.log("user2JX =", user2JX);
         if (user1JX >= user2JX) {
             return true;
         } else {

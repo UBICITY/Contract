@@ -25,6 +25,7 @@ contract NCITYSocialServer is iPerformancePool {
     address public selfAddress;
 
     modifier onlyOwner() {
+      require(msg.sender == owner, "NOT_OWNER");
         _;
     }
 
