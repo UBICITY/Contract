@@ -99,7 +99,7 @@ contract NPToken_Server is NERC1155 {
         uint256 value
     ) public {
         require(
-            IDMap[CityID] != address(0x0),
+            IDMap[CityID] != address(0),
             "CityID must be include in ptoken"
         );
         require(
@@ -132,7 +132,7 @@ contract NPToken_Server is NERC1155 {
         returns (address)
     {
         require(
-            IDMap[cityID] != address(0x0),
+            IDMap[cityID] != address(0),
             "cityID must be include in ptoken"
         );
         return IDMap[cityID];

@@ -49,7 +49,7 @@ contract NPPLControl {
 
     function oneRollRestart() public {
         require(
-            CitySocialServerAddress != address(0x0),
+            CitySocialServerAddress != address(0),
             "CitySocialServerAddress must be init"
         );
         _rollIndex++;
@@ -83,7 +83,7 @@ contract NPPLControl {
         uint256 jxValue
     ) public {
         require(
-            PTokenServerAddress != address(0x0),
+            PTokenServerAddress != address(0),
             "PTokenServerAddress must be init"
         );
         require(
@@ -99,7 +99,7 @@ contract NPPLControl {
             "contractAddress must be inclue in JXProportionMap"
         );
         require(
-            CitySocialServerAddress != address(0x0),
+            CitySocialServerAddress != address(0),
             "CitySocialServerAddress must be init"
         );
         if (userAddress == rootAddress) {
@@ -249,7 +249,7 @@ contract NPPLControl {
         view
         returns (uint256)
     {
-        require(CityAddress != address(0x0), "CityAddress can not be zero");
+        require(CityAddress != address(0), "CityAddress can not be zero");
         return ScoreMap[CityAddress] - RollScoreMap[_rollIndex][CityAddress];
     }
 

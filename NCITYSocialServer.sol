@@ -25,7 +25,7 @@ contract NCITYSocialServer is iPerformancePool {
     address public selfAddress;
 
     modifier onlyOwner() {
-      require(msg.sender == owner, "NOT_OWNER");
+        require(msg.sender == owner, "NOT_OWNER");
         _;
     }
 
@@ -64,7 +64,7 @@ contract NCITYSocialServer is iPerformancePool {
     function registerUpAddress(address downAddress, address upAddress) public {
         // 入参地址格式检查
         require(
-            upAddress != address(0x0),
+            upAddress != address(0),
             "trustAddress can not be address zero"
         );
         // require(msg.sender == downAddress, "msg.sender must be equal to downAddress");
@@ -132,7 +132,7 @@ contract NCITYSocialServer is iPerformancePool {
 
     function mintPtokenForCityAddress(address cityAddress) internal {
         require(
-            pTokenContractAddress != address(0x0),
+            pTokenContractAddress != address(0),
             "pTokenContractAddress must be init"
         );
         NPToken_Server(pTokenContractAddress).mintFromControler(cityAddress);
