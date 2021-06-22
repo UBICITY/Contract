@@ -10,15 +10,15 @@
 
 3. NPToken_Server.sol
 
-   In development
+   In test
 
 4. GToken_A.sol
 
-   In development
+   In test
 
 5. NCITYSocialServer.sol
 
-   In development
+   In test
 
 6. NERC1155.sol
 

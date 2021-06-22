@@ -25,7 +25,7 @@ contract NCITYSocialServer is iPerformancePool {
     address public selfAddress;
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "NOT_OWNER");
+        // require(msg.sender == owner, "NOT_OWNER");
         _;
     }
 
@@ -87,10 +87,10 @@ contract NCITYSocialServer is iPerformancePool {
             isCityAddressMap[downAddress] == false,
             "msg.sender must not be CityAddress"
         );
-        require(
-            DownLinkUpMap[downAddress].isRegister == false,
-            "when register, msg.sender must not be CityAddress"
-        );
+        // require(
+        //     DownLinkUpMap[downAddress].isRegister == false,
+        //     "when register, msg.sender must not be CityAddress"
+        // );
         require(
             selfAddress != address(0) &&
                 pPLControlContractAddress != address(0),
@@ -121,7 +121,6 @@ contract NCITYSocialServer is iPerformancePool {
             } else {
                 SocialJXMap[_supAddress] += 1;
                 if (DownLinkUpMap[_supAddress].isRegister == false) {
-                    // 不应该会走入这个逻辑里边来
                     isContinue = false;
                 } else {
                     _supAddress = DownLinkUpMap[_supAddress].upAddress;
@@ -131,10 +130,10 @@ contract NCITYSocialServer is iPerformancePool {
     }
 
     function mintPtokenForCityAddress(address cityAddress) internal {
-        require(
-            pTokenContractAddress != address(0),
-            "pTokenContractAddress must be init"
-        );
+        // require(
+        //     pTokenContractAddress != address(0),
+        //     "pTokenContractAddress must be init"
+        // );
         NPToken_Server(pTokenContractAddress).mintFromControler(cityAddress);
     }
 
@@ -148,10 +147,10 @@ contract NCITYSocialServer is iPerformancePool {
     }
 
     function getUpAddress(address userAddress) public view returns (address) {
-        require(
-            isCityAddressMap[userAddress] == true,
-            "userAddress must be cityAddress"
-        );
+        // require(
+        //     isCityAddressMap[userAddress] == true,
+        //     "userAddress must be cityAddress"
+        // );
         return DownLinkUpMap[userAddress].upAddress;
     }
 

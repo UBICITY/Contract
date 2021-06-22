@@ -12,11 +12,11 @@ contract GToken_A is ERC20, iGtoken {
     uint64[] public CityIdList;
     mapping(uint64 => bool) ContainCityIDMap;
     mapping(uint64 => uint256) CityIDListIndex;
-    address public owner;
+    address public _OWNER_;
     address public pTokenServer;
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "NOT_OWNER");
+        require(msg.sender == _OWNER_, "NOT_OWNER");
         _;
     }
 
@@ -26,7 +26,7 @@ contract GToken_A is ERC20, iGtoken {
     }
 
     constructor() public ERC20("GtokenA", "GTA") {
-        owner = msg.sender;
+        _OWNER_ = msg.sender;
     }
 
     function initPTokenServer(address _pTokenServer) public onlyOwner {
